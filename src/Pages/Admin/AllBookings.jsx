@@ -108,7 +108,7 @@ const AllBookings = () => {
                     Check-out:{" "}
                     {new Date(booking.checkOutDate).toLocaleDateString()}
                   </p>
-                  <p>Price: ${booking.totalAmount || "N/A"}</p>
+                  <p>Price: Rs{booking.totalAmount || "N/A"}</p>
                   <p>Room Type: {booking.room?.roomType || "N/A"}</p>
                 </div>
                 <div className="pt-6 text-lg font-semibold leading-7 flex justify-between gap-4">
