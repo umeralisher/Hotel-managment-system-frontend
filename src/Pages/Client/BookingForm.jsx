@@ -230,7 +230,7 @@ const BookingForm = () => {
             value={formData.totalAmount}
             readOnly
             className="block w-full h-11 px-5 py-2.5 bg-gray-100 border border-gray-300 rounded-full"
-            placeholder="Total will be auto-calculated"
+            placeholder="Total will be auto-calculated in Rs"
           />
         </div>
 
