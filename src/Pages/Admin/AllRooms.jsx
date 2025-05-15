@@ -85,7 +85,7 @@ const AllRooms = () => {
                       {room.roomNumber} - {room.roomType}
                     </h2>
                     <p>{room.description}</p>
-                    <p>Price per night: ${room.pricePerNight}</p>
+                    <p>Price per night: Rs {room.pricePerNight}</p>
                     <p>Status: {room.status}</p>
                     <p
                       className={`text-sm ${
