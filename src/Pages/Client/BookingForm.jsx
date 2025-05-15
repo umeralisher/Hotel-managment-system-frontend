@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 
 const BookingForm = () => {
   const [rooms, setRooms] = useState([]);
+  const [roomPrice, setRoomPrice] = useState(0);
   const [formData, setFormData] = useState({
     user: "",
     room: "",
@@ -19,14 +20,12 @@ const BookingForm = () => {
       try {
         const backendUrl =
           "https://hotel-managment-system-backend.onrender.com";
-
         const roomsResponse = await axios.get(`${backendUrl}/rooms/get-rooms`);
         const allRooms = roomsResponse.data;
 
         const availableRooms = allRooms.filter(
           (room) => room.status === "available"
         );
-
         setRooms(availableRooms);
       } catch (err) {
         setError("Could not fetch rooms. Please try again.");
@@ -37,7 +36,53 @@ const BookingForm = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // If room is selected
+    if (name === "room") {
+      const selectedRoom = rooms.find((r) => r._id === value);
+      if (selectedRoom) {
+        setRoomPrice(selectedRoom.pricePerNight);
+      }
+    }
+
+    // If check-in or check-out date changes, calculate total
+    if (
+      (name === "checkInDate" || name === "checkOutDate" || name === "room") &&
+      (formData.checkInDate || name === "checkInDate") &&
+      (formData.checkOutDate || name === "checkOutDate") &&
+      (formData.room || name === "room")
+    ) {
+      const checkIn = name === "checkInDate" ? value : formData.checkInDate;
+      const checkOut = name === "checkOutDate" ? value : formData.checkOutDate;
+      const selectedRoomId = name === "room" ? value : formData.room;
+
+      const selectedRoom = rooms.find((r) => r._id === selectedRoomId);
+      if (checkIn && checkOut && selectedRoom) {
+        const checkInDate = new Date(checkIn);
+        const checkOutDate = new Date(checkOut);
+        const diffTime = checkOutDate - checkInDate;
+        const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (nights > 0) {
+          const total = (nights * selectedRoom.pricePerNight).toFixed(2);
+          setFormData((prev) => ({
+            ...prev,
+            totalAmount: total,
+          }));
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            totalAmount: "",
+          }));
+        }
+      }
+    }
   };
 
   const submitHandler = async (e) => {
@@ -96,7 +141,7 @@ const BookingForm = () => {
         <hr />
         <br />
 
-        {/* User Input */}
+        {/* User Name */}
         <div className="mb-6">
           <label className="mb-2 text-gray-600 text-sm font-medium">
             Your Name
@@ -112,8 +157,8 @@ const BookingForm = () => {
           />
         </div>
 
-        {/* Room Selection Dropdown */}
-        <div className="mb-6">
+        {/* Room Selection */}
+        <div className="mb-2">
           <label className="mb-2 text-gray-600 text-sm font-medium">
             Select Room
           </label>
@@ -138,8 +183,13 @@ const BookingForm = () => {
             )}
           </select>
         </div>
+        {roomPrice > 0 && (
+          <p className="text-sm text-gray-500 mb-4">
+            Price per night: Rs {roomPrice}
+          </p>
+        )}
 
-        {/* Check-in and Check-out Dates */}
+        {/* Check-in & Check-out */}
         <div className="flex gap-x-6 mb-6">
           <div className="w-full">
             <label className="mb-2 text-gray-600 text-sm font-medium">
@@ -169,7 +219,7 @@ const BookingForm = () => {
           </div>
         </div>
 
-        {/* Total Amount */}
+        {/* Total Amount - read only */}
         <div className="mb-6">
           <label className="mb-2 text-gray-600 text-sm font-medium">
             Total Amount
@@ -178,10 +228,9 @@ const BookingForm = () => {
             type="number"
             name="totalAmount"
             value={formData.totalAmount}
-            onChange={handleChange}
-            placeholder="Enter amount"
-            className="block w-full h-11 px-5 py-2.5 bg-white border border-gray-300 rounded-full"
-            required
+            readOnly
+            className="block w-full h-11 px-5 py-2.5 bg-gray-100 border border-gray-300 rounded-full"
+            placeholder="Total will be auto-calculated"
           />
         </div>
 
@@ -206,6 +255,7 @@ const BookingForm = () => {
         <button
           type="submit"
           className="w-52 h-12 shadow-sm rounded-full bg-indigo-600 hover:bg-indigo-800 transition-all duration-700 text-white text-base font-semibold mt-6"
+          disabled={!formData.totalAmount}
         >
           Book Room
         </button>
